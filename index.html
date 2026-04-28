@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draft Helper Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <section id="step-1" class="step active">
+            <h1>Configuración de Partida</h1>
+            <div class="options">
+                <button onclick="setPartidas(3)">3 Partidas</button>
+                <button onclick="setPartidas(5)">5 Partidas</button>
+            </div>
+        </section>
+
+        <section id="step-2" class="step">
+            <h1>¿Deseas aplicar Bans Globales?</h1>
+            <div class="options">
+                <button onclick="toggleGlobalBans(true)">Sí</button>
+                <button onclick="toggleGlobalBans(false)">No</button>
+            </div>
+        </section>
+
+        <section id="step-3" class="step">
+            <h1>Selecciona 3 Bans Globales</h1>
+            <div id="global-grid" class="grid"></div>
+            <button id="btn-next-global" class="next-btn" disabled onclick="goToStep(4)">Siguiente</button>
+        </section>
+
+        <section id="step-4" class="step">
+            <h1>Selecciona Modo de Juego</h1>
+            <div id="modes-grid" class="options"></div>
+        </section>
+
+        <section id="step-5" class="step">
+            <h1>Selecciona el Mapa</h1>
+            <div id="maps-grid" class="grid"></div>
+        </section>
+
+        <section id="step-6" class="step">
+            <h1>Selecciona 6 Bans Adicionales</h1>
+            <div id="local-grid" class="grid"></div>
+            <button id="btn-next-local" class="next-btn" disabled onclick="showResults()">Ver Sugerencias</button>
+        </section>
+
+        <section id="step-7" class="step">
+            <h1>Mejores Personajes Sugeridos</h1>
+            <div id="results-grid" class="grid"></div>
+            <button class="reset-btn" onclick="location.reload()">Reiniciar Draft</button>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
