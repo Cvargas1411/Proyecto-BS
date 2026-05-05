@@ -8,6 +8,10 @@
 </head>
 <body>
     <div id="app">
+        <!-- Indicador de Partida Actual -->
+        <div id="game-counter" class="hidden">Partida: <span id="current-game-num">1</span> / <span id="total-games-num">0</span></div>
+
+        <!-- PASO 1: PARTIDAS -->
         <section id="step-1" class="step active">
             <h1>Configuración de Partida</h1>
             <div class="options">
@@ -16,6 +20,7 @@
             </div>
         </section>
 
+        <!-- PASO 2: PREGUNTA BAN GLOBALES -->
         <section id="step-2" class="step">
             <h1>¿Deseas aplicar Bans Globales?</h1>
             <div class="options">
@@ -24,32 +29,41 @@
             </div>
         </section>
 
+        <!-- PASO 3: SELECCIÓN BANS GLOBALES -->
         <section id="step-3" class="step">
             <h1>Selecciona 3 Bans Globales</h1>
             <div id="global-grid" class="grid"></div>
             <button id="btn-next-global" class="next-btn" disabled onclick="renderModes(); goToStep(4)">Siguiente</button>
         </section>
 
+        <!-- PASO 4: MODO DE JUEGO -->
         <section id="step-4" class="step">
             <h1>Selecciona Modo de Juego</h1>
             <div id="modes-grid" class="options"></div>
         </section>
 
+        <!-- PASO 5: SELECCIÓN DE MAPA -->
         <section id="step-5" class="step">
             <h1>Selecciona el Mapa</h1>
             <div id="maps-grid" class="grid"></div>
         </section>
 
+        <!-- PASO 6: BANS LOCALES -->
         <section id="step-6" class="step">
             <h1>Selecciona 6 Bans Adicionales</h1>
             <div id="local-grid" class="grid"></div>
             <button id="btn-next-local" class="next-btn" disabled onclick="showResults()">Ver Sugerencias</button>
         </section>
 
+        <!-- PASO 7: RESULTADOS -->
         <section id="step-7" class="step">
             <h1>Mejores Personajes Sugeridos</h1>
             <div id="results-grid" class="grid"></div>
-            <button class="reset-btn" onclick="location.reload()">Reiniciar Draft</button>
+            
+            <div id="action-buttons">
+                <button id="btn-next-match" class="next-btn" onclick="nextMatch()">Siguiente Partida</button>
+                <button id="btn-restart" class="reset-btn hidden" onclick="location.reload()">Finalizar y Reiniciar Todo</button>
+            </div>
         </section>
     </div>
     <script src="script.js"></script>
