@@ -2,68 +2,79 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Draft Helper Pro</title>
+    <title>Draft Brawlers</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app">
-        <!-- Indicador de Partida Actual -->
-        <div id="game-counter" class="hidden">Partida: <span id="current-game-num">1</span> / <span id="total-games-num">0</span></div>
+        <div id="search-container" class="hidden">
+            <input type="text" id="search-bar" placeholder="Buscar Brawler..." onkeyup="filtrarBrawlers()">
+        </div>
 
-        <!-- PASO 1: PARTIDAS -->
+        <div id="game-counter" class="hidden">Partida: <span id="current-game">1</span> / <span id="total-games">0</span></div>
+
         <section id="step-1" class="step active">
-            <h1>Configuración de Partida</h1>
-            <div class="options">
-                <button onclick="setPartidas(3)">3 Partidas</button>
-                <button onclick="setPartidas(5)">5 Partidas</button>
-            </div>
+            <h1>¿Habrá Bans Globales?</h1>
+            <button onclick="setUsaBansGlobales(true)">Sí</button>
+            <button onclick="setUsaBansGlobales(false)">No</button>
         </section>
 
-        <!-- PASO 2: PREGUNTA BAN GLOBALES -->
         <section id="step-2" class="step">
-            <h1>¿Deseas aplicar Bans Globales?</h1>
-            <div class="options">
-                <button onclick="toggleGlobalBans(true)">Sí</button>
-                <button onclick="toggleGlobalBans(false)">No</button>
-            </div>
+            <h1>Cantidad de Partidas</h1>
+            <button onclick="setPartidas(3)">3 Partidas</button>
+            <button onclick="setPartidas(5)">5 Partidas</button>
         </section>
 
-        <!-- PASO 3: SELECCIÓN BANS GLOBALES -->
         <section id="step-3" class="step">
-            <h1>Selecciona 3 Bans Globales</h1>
-            <div id="global-grid" class="grid"></div>
-            <button id="btn-next-global" class="next-btn" disabled onclick="renderModes(); goToStep(4)">Siguiente</button>
+            <h1>Selecciona de 1 a 5 Bans Globales</h1>
+            <div id="global-grid" class="brawler-grid"></div>
+            <button id="btn-next-global" class="next-btn" onclick="goToStep(4)">Siguiente (Modo)</button>
         </section>
 
-        <!-- PASO 4: MODO DE JUEGO -->
         <section id="step-4" class="step">
-            <h1>Selecciona Modo de Juego</h1>
-            <div id="modes-grid" class="options"></div>
+            <h1>Selecciona Modo</h1>
+            <div id="modes-grid"></div>
         </section>
 
-        <!-- PASO 5: SELECCIÓN DE MAPA -->
         <section id="step-5" class="step">
-            <h1>Selecciona el Mapa</h1>
-            <div id="maps-grid" class="grid"></div>
+            <h1>Selecciona Mapa</h1>
+            <div id="maps-grid"></div>
         </section>
 
-        <!-- PASO 6: BANS LOCALES -->
         <section id="step-6" class="step">
-            <h1>Selecciona 6 Bans Adicionales</h1>
-            <div id="local-grid" class="grid"></div>
-            <button id="btn-next-local" class="next-btn" disabled onclick="showResults()">Ver Sugerencias</button>
+            <h1>Selecciona 6 Bans de Partida</h1>
+            <div id="local-grid" class="brawler-grid"></div>
+            <button id="btn-next-local" class="next-btn" disabled onclick="goToStep(7)">Siguiente</button>
         </section>
 
-        <!-- PASO 7: RESULTADOS -->
         <section id="step-7" class="step">
-            <h1>Mejores Personajes Sugeridos</h1>
-            <div id="results-grid" class="grid"></div>
+            <h1>¿Orden de Pick?</h1>
+            <button onclick="iniciarDraft(true)">First Pick</button>
+            <button onclick="iniciarDraft(false)">Last Pick</button>
+        </section>
+
+        <section id="step-8" class="step">
+            <h2 id="turn-indicator">Turno actual</h2>
             
-            <div id="action-buttons">
-                <button id="btn-next-match" class="next-btn" onclick="nextMatch()">Siguiente Partida</button>
-                <button id="btn-restart" class="reset-btn hidden" onclick="location.reload()">Finalizar y Reiniciar Todo</button>
+            <div class="draft-board">
+                <div class="team-picks">
+                    <h3>Nuestro Equipo</h3>
+                    <div id="our-picks-container"></div>
+                </div>
+                <div class="team-picks">
+                    <h3>Rival</h3>
+                    <div id="enemy-picks-container"></div>
+                </div>
             </div>
+
+            <h3>Sugerencias (Calculadas matemáticamente)</h3>
+            <div id="suggestions-container" class="suggestions-grid"></div>
+
+            <h3>Selecciona Brawler</h3>
+            <div id="draft-selection-grid" class="brawler-grid"></div>
+            
+            <button id="btn-next-match" class="next-btn hidden" onclick="siguientePartida()">Siguiente Partida</button>
+            <button id="btn-restart" class="reset-btn hidden" onclick="location.reload()">Finalizar y Resetear</button>
         </section>
     </div>
     <script src="script.js"></script>
