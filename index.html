@@ -8,7 +8,6 @@
 </head>
 <body>
     <div id="app">
-        <!-- HEADER FIJO -->
         <header id="main-header">
             <h2 id="game-counter" class="hidden">Partida <span id="current-game">1</span> de <span id="total-games">0</span></h2>
             <div id="search-container" class="hidden">
@@ -16,9 +15,7 @@
             </div>
         </header>
 
-        <!-- CONTENEDOR DE PASOS -->
         <main id="steps-container">
-            <!-- PASO 1 -->
             <section id="step-1" class="step active">
                 <h1>¿Habrá Bans Globales?</h1>
                 <div class="options">
@@ -27,7 +24,6 @@
                 </div>
             </section>
 
-            <!-- PASO 2 -->
             <section id="step-2" class="step">
                 <h1>Cantidad de Partidas</h1>
                 <div class="options">
@@ -36,33 +32,28 @@
                 </div>
             </section>
 
-            <!-- PASO 3 -->
             <section id="step-3" class="step">
                 <h1>Selecciona Bans Globales (1 a 5)</h1>
                 <div id="global-grid" class="brawler-grid"></div>
-                <button id="btn-next-global" class="btn-confirm" disabled onclick="goToStep(4)">Confirmar Bans Globales</button>
+                <button id="btn-next-global" class="btn-confirm" disabled onclick="renderModos()">Confirmar Bans Globales</button>
             </section>
 
-            <!-- PASO 4 -->
             <section id="step-4" class="step">
                 <h1>Selecciona Modo</h1>
                 <div id="modes-grid" class="options"></div>
             </section>
 
-            <!-- PASO 5 -->
             <section id="step-5" class="step">
                 <h1>Selecciona Mapa</h1>
                 <div id="maps-grid" class="options"></div>
             </section>
 
-            <!-- PASO 6 -->
             <section id="step-6" class="step">
                 <h1>Selecciona 6 Bans de Partida</h1>
                 <div id="local-grid" class="brawler-grid"></div>
                 <button id="btn-next-local" class="btn-confirm" disabled onclick="goToStep(7)">Confirmar Bans Locales</button>
             </section>
 
-            <!-- PASO 7 -->
             <section id="step-7" class="step">
                 <h1>¿Orden de Pick?</h1>
                 <div class="options">
@@ -71,9 +62,7 @@
                 </div>
             </section>
 
-            <!-- PASO 8: DRAFT MEJORADO -->
             <section id="step-8" class="step draft-section">
-                <!-- Tablero de equipos -->
                 <div class="draft-board">
                     <div class="team our-team">
                         <h3>NUESTRO EQUIPO</h3>
@@ -86,7 +75,6 @@
                     </div>
                 </div>
 
-                <!-- Sugerencias y Controles -->
                 <div class="draft-controls">
                     <h2 id="turn-indicator" class="turn-title">Calculando...</h2>
                     

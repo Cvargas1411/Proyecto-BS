@@ -140,7 +140,6 @@ const MAP_DATA = {
     }
 };
 
-// --- 2. ESTADO GENERAL ---
 let state = {
     usaBansGlobales: false,
     totalPartidas: 0,
@@ -153,10 +152,10 @@ let state = {
     rivalPicks: []
 };
 
-// --- 3. ESTADO DEL DRAFT (Por Fases) ---
+// --- 3. ESTADO DEL DRAFT ---
 let draftPhases = [];
 let currentDraftPhase = 0;
-let tempDraftSelection = []; // Guarda los brawlers que estás clickeando en el turno actual
+let tempDraftSelection = [];
 
 // --- 4. FUNCIONES DE NAVEGACIÓN Y UI ---
 function goToStep(num) {
@@ -180,12 +179,10 @@ function filtrarBrawlers() {
     });
 }
 
-// Generador de Grillas Reutilizable
 function renderBrawlerGrid(containerId, limit, targetArray, buttonId, cssClass, isRange = false, isDraft = false) {
     const container = document.getElementById(containerId);
     container.innerHTML = "";
     
-    // Calcular bloqueados (Solo se usan si NO es draft, en draft se calcula dinámicamente)
     let bloqueados = containerId === "local-grid" ? state.bansGlobales : [];
 
     BRAWLERS.forEach(brawler => {
@@ -193,7 +190,6 @@ function renderBrawlerGrid(containerId, limit, targetArray, buttonId, cssClass, 
         btn.className = "brawler-btn";
         btn.dataset.name = brawler;
         
-        // Manejo de error de imagen: Si la imagen falla, muestra una imagen vacía o de fallback
         btn.innerHTML = `
             <div class="brawler-img-box">
                 <img src="Portraits/${brawler}_portrait.png" alt="${brawler}" onerror="this.src='https://via.placeholder.com/60/1e293b/ffffff?text=?';">
@@ -260,7 +256,6 @@ function renderMapas(modo) {
     const container = document.getElementById("maps-grid");
     container.innerHTML = "";
     
-    // Si el modo no existe en MAP_DATA, evita que explote
     const mapasDisponibles = MAP_DATA[modo] ? Object.keys(MAP_DATA[modo]) : [];
     
     if(mapasDisponibles.length === 0) {
@@ -281,7 +276,7 @@ function renderMapas(modo) {
     goToStep(5);
 }
 
-// --- 6. SISTEMA DE DRAFT MEJORADO ---
+// --- 6. SISTEMA DE DRAFT ---
 function iniciarDraft(esFirstPick) {
     if (esFirstPick) {
         draftPhases = [
@@ -309,11 +304,9 @@ function prepararPantallaTurnoDraft() {
     const turnIndicator = document.getElementById("turn-indicator");
     const btnConfirm = document.getElementById("btn-confirm-draft");
     
-    // Actualizar avatares elegidos arriba
     document.getElementById("our-picks-container").innerHTML = state.nuestrosPicks.map(p => `<img src="Portraits/${p}_portrait.png" onerror="this.src='https://via.placeholder.com/45?text=?'">`).join("");
     document.getElementById("enemy-picks-container").innerHTML = state.rivalPicks.map(p => `<img src="Portraits/${p}_portrait.png" onerror="this.src='https://via.placeholder.com/45?text=?'">`).join("");
 
-    // Revisar si terminó el draft
     if (currentDraftPhase >= draftPhases.length) {
         turnIndicator.innerText = "¡DRAFT FINALIZADO!";
         turnIndicator.style.color = "#10b981";
@@ -332,24 +325,19 @@ function prepararPantallaTurnoDraft() {
     const faseActual = draftPhases[currentDraftPhase];
     const esNuestro = faseActual.team === 'N';
     
-    // Título del turno
     turnIndicator.innerText = esNuestro 
         ? `Turno de NUESTRO EQUIPO (Elige ${faseActual.count})` 
         : `Turno del RIVAL (Elige ${faseActual.count})`;
     turnIndicator.style.color = esNuestro ? "var(--primary)" : "var(--danger)";
 
-    // Mostrar Botón Confirmar (oculto por defecto)
     btnConfirm.classList.remove("hidden");
     btnConfirm.disabled = true;
 
-    // Calcular Sugerencias
     actualizarSugerencias();
 
-    // Dibujar la grilla para seleccionar
     const cssClass = esNuestro ? "selected-us" : "selected-ban";
     renderBrawlerGrid("draft-selection-grid", faseActual.count, tempDraftSelection, "btn-confirm-draft", cssClass, false, true);
     
-    // Bloquear los ya elegidos/baneados en la grilla visualmente
     bloquearElegidosEnDraft();
 }
 
@@ -380,12 +368,11 @@ function confirmarPickDraft() {
     prepararPantallaTurnoDraft();
 }
 
-// --- 7. MOTOR MATEMÁTICO DE SUGERENCIAS ---
+// --- 7. MOTOR DE SUGERENCIAS ---
 function actualizarSugerencias() {
     const todosOcupados = [...state.bansGlobales, ...state.bansLocales, ...state.nuestrosPicks, ...state.rivalPicks];
     let disponibles = BRAWLERS.filter(b => !todosOcupados.includes(b));
     
-    // Evitar crasheo si el mapa no tiene top15 configurado
     let top15Mapa = MAP_DATA[state.modo]?.[state.mapa]?.top15 || [];
 
     let puntajes = disponibles.map(brawler => {
@@ -393,9 +380,7 @@ function actualizarSugerencias() {
         if (top15Mapa.includes(brawler)) score += 1;
 
         state.rivalPicks.forEach(rival => {
-            // El rival me hace counter
             if (BRAWLER_COUNTERS[rival] && BRAWLER_COUNTERS[rival].includes(brawler)) score -= 1;
-            // Yo le hago counter al rival
             if (BRAWLER_COUNTERS[brawler] && BRAWLER_COUNTERS[brawler].includes(rival)) score += 1;
         });
         return { name: brawler, score: score };
