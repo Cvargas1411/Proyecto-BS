@@ -1,66 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+:root {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+#app {
+    width: 100%;
+    max-width: 900px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER Y BUSCADOR */
+#main-header {
+    text-align: center;
+    margin-bottom: 20px;
+    min-height: 60px;
+}
+
+#game-counter { color: var(--primary); font-weight: 800; }
+#search-bar {
+    width: 80%;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 30px;
+    border: none;
+    background: var(--card-bg);
+    color: white;
+    outline: none;
+    border: 2px solid transparent;
+    transition: 0.3s;
+}
+#search-bar:focus { border-color: var(--primary); }
+
+/* ANIMACIÓN Y PASOS */
+.step { 
+    display: none; 
+    text-align: center;
+    animation: fadeIn 0.4s ease-out forwards;
+}
+.step.active { display: block; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h1 { margin-bottom: 30px; font-weight: 600; }
+
+/* BOTONES GENERALES */
+.options { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+button { font-family: 'Poppins', sans-serif; cursor: pointer; transition: 0.2s; }
+
+.btn-primary, .btn-secondary, .btn-confirm, .btn-danger {
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    color: white;
+}
+.btn-primary { background: var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
+.btn-secondary { background: #475569; }
+.btn-secondary:hover { background: #334155; transform: translateY(-2px); }
+.btn-danger { background: var(--danger); width: 100%; margin-top: 20px; }
+.btn-confirm { background: #10b981; width: 100%; margin-top: 30px; }
+.btn-confirm:disabled { background: #374151; color: #6b7280; cursor: not-allowed; transform: none; }
+
+/* GRILLA DE BRAWLERS */
 .brawler-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 10px;
-    margin-top: 15px;
+    gap: 12px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: 12px;
 }
 
 .brawler-btn {
-    background: #333;
-    border: 2px solid transparent;
+    background: #334155;
+    border: 3px solid transparent;
+    border-radius: 10px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     color: white;
+}
+
+.brawler-img-box {
+    width: 60px;
+    height: 60px;
     border-radius: 8px;
-    padding: 5px;
-    cursor: pointer;
-    text-transform: capitalize;
-}
-
-.brawler-btn img {
-    width: 100%;
-    border-radius: 5px;
+    overflow: hidden;
     margin-bottom: 5px;
+    background: #1e293b;
 }
 
-.brawler-btn.selected { border-color: #007bff; background: #0056b3; }
-.brawler-btn.banned { opacity: 0.3; cursor: not-allowed; border-color: #ff0000; }
+.brawler-img-box img { width: 100%; height: 100%; object-fit: cover; }
+.brawler-name { font-size: 12px; font-weight: 600; text-transform: capitalize; }
 
-#search-container {
-    position: sticky;
-    top: 0;
-    background: #1a1a1a;
-    padding: 10px 0;
-    z-index: 100;
-}
+.brawler-btn.selected-ban { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); }
+.brawler-btn.selected-us { border-color: var(--primary); background: rgba(59, 130, 246, 0.2); }
+.brawler-btn.banned { opacity: 0.2; cursor: not-allowed; filter: grayscale(100%); }
 
-#search-bar {
-    width: 80%;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: none;
-}
+.hidden { display: none !important; }
 
+/* DRAFT BOARD */
 .draft-board {
     display: flex;
-    justify-content: space-around;
-    background: #222;
-    padding: 15px;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+.team { width: 40%; }
+.our-team h3 { color: var(--primary); }
+.enemy-team h3 { color: var(--danger); }
+.draft-vs { font-size: 24px; font-weight: 800; color: var(--text-muted); }
+
+.team-slots { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; min-height: 50px; }
+.team-slots img { width: 45px; height: 45px; border-radius: 8px; border: 2px solid; }
+.our-team .team-slots img { border-color: var(--primary); }
+.enemy-team .team-slots img { border-color: var(--danger); }
+
+/* SUGERENCIAS */
+#suggestions-area { margin-bottom: 20px; }
+.suggestions-grid { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+.sug-card {
+    background: #059669;
+    padding: 8px 15px;
     border-radius: 10px;
-    margin-bottom: 20px;
-}
-
-.suggestions-grid {
     display: flex;
-    justify-content: center;
+    align-items: center;
     gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
+    font-weight: 600;
 }
-
-.sugerencia-card {
-    background: #28a745;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: bold;
-    text-align: center;
-}
+.sug-card img { width: 30px; height: 30px; border-radius: 5px; }

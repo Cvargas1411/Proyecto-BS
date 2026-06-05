@@ -140,6 +140,7 @@ const MAP_DATA = {
     }
 };
 
+// --- 2. ESTADO GENERAL ---
 let state = {
     usaBansGlobales: false,
     totalPartidas: 0,
@@ -148,69 +149,82 @@ let state = {
     modo: "",
     mapa: "",
     bansLocales: [],
-    
-    // Variables de Draft
-    esFirstPick: true,
-    secuenciaTurnos: [], // Arreglo que define de quién es el turno: ['nosotros', 'rival', 'rival', ...]
-    turnoActualIndex: 0,
     nuestrosPicks: [],
     rivalPicks: []
 };
 
-function calcularMejoresPicks() {
-    const todosLosBansYPicks = [
-        ...state.bansGlobales, 
-        ...state.bansLocales, 
-        ...state.nuestrosPicks, 
-        ...state.rivalPicks
-    ];
-    
-    // Filtrar los que ya no están disponibles
-    let disponibles = BRAWLERS.filter(b => !todosLosBansYPicks.includes(b));
-    let top15Mapa = MAP_DATA[state.modo][state.mapa].top15;
+// --- 3. ESTADO DEL DRAFT (Por Fases) ---
+let draftPhases = [];
+let currentDraftPhase = 0;
+let tempDraftSelection = []; // Guarda los brawlers que estás clickeando en el turno actual
 
-    let puntajes = disponibles.map(brawler => {
-        let score = 0;
-        
-        // Regla 1: +1 si está en top 15
-        if (top15Mapa.includes(brawler)) score += 1;
-
-        // Evaluación contra picks del rival
-        state.rivalPicks.forEach(rival => {
-            // Regla 2: -1 si el rival me hace counter
-            if (BRAWLER_COUNTERS[rival] && BRAWLER_COUNTERS[rival].includes(brawler)) {
-                score -= 1;
-            }
-            // Regla 3: +1 si yo le hago counter al rival
-            if (BRAWLER_COUNTERS[brawler] && BRAWLER_COUNTERS[brawler].includes(rival)) {
-                score += 1;
-            }
-        });
-
-        return { name: brawler, score: score };
-    });
-
-    // Ordenar de mayor a menor puntaje
-    puntajes.sort((a, b) => b.score - a.score);
-    return puntajes;
-}
-
-// --- FUNCIONES DE NAVEGACIÓN ---
+// --- 4. FUNCIONES DE NAVEGACIÓN Y UI ---
 function goToStep(num) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById(`step-${num}`).classList.add('active');
     
-    // Mostrar buscador solo en los pasos donde se eligen brawlers
     const searchContainer = document.getElementById('search-container');
     if ([3, 6, 8].includes(num)) {
         searchContainer.classList.remove('hidden');
-        document.getElementById('search-bar').value = ""; // Limpiar busqueda
+        document.getElementById('search-bar').value = ""; 
         filtrarBrawlers(); 
     } else {
         searchContainer.classList.add('hidden');
     }
 }
 
+function filtrarBrawlers() {
+    let query = document.getElementById("search-bar").value.toLowerCase();
+    document.querySelectorAll(".brawler-btn").forEach(btn => {
+        btn.style.display = btn.dataset.name.includes(query) ? "flex" : "none";
+    });
+}
+
+// Generador de Grillas Reutilizable
+function renderBrawlerGrid(containerId, limit, targetArray, buttonId, cssClass, isRange = false, isDraft = false) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    
+    // Calcular bloqueados (Solo se usan si NO es draft, en draft se calcula dinámicamente)
+    let bloqueados = containerId === "local-grid" ? state.bansGlobales : [];
+
+    BRAWLERS.forEach(brawler => {
+        const btn = document.createElement("button");
+        btn.className = "brawler-btn";
+        btn.dataset.name = brawler;
+        
+        // Manejo de error de imagen: Si la imagen falla, muestra una imagen vacía o de fallback
+        btn.innerHTML = `
+            <div class="brawler-img-box">
+                <img src="Portraits/${brawler}_portrait.png" alt="${brawler}" onerror="this.src='https://via.placeholder.com/60/1e293b/ffffff?text=?';">
+            </div>
+            <div class="brawler-name">${brawler}</div>
+        `;
+        
+        if (targetArray.includes(brawler)) btn.classList.add(cssClass);
+        if (bloqueados.includes(brawler)) { btn.disabled = true; btn.classList.add("banned"); }
+
+        btn.onclick = () => {
+            if (targetArray.includes(brawler)) {
+                targetArray.splice(targetArray.indexOf(brawler), 1);
+                btn.classList.remove(cssClass);
+            } else if (targetArray.length < limit) {
+                targetArray.push(brawler);
+                btn.classList.add(cssClass);
+            }
+            
+            if(!isDraft) {
+                const btnNext = document.getElementById(buttonId);
+                btnNext.disabled = isRange ? (targetArray.length === 0) : (targetArray.length !== limit);
+            } else {
+                validarBotonDraft();
+            }
+        };
+        container.appendChild(btn);
+    });
+}
+
+// --- 5. FLUJO INICIAL ---
 function setUsaBansGlobales(usa) {
     state.usaBansGlobales = usa;
     goToStep(2);
@@ -222,127 +236,90 @@ function setPartidas(n) {
     document.getElementById('game-counter').classList.remove('hidden');
     
     if (state.usaBansGlobales) {
-        renderBrawlerGrid("global-grid", state.bansGlobales, 5, "btn-next-global", true);
+        renderBrawlerGrid("global-grid", 5, state.bansGlobales, "btn-next-global", "selected-ban", true, false);
         goToStep(3);
     } else {
         renderModos();
-        goToStep(4);
     }
 }
 
-// --- FUNCIÓN PARA DIBUJAR BRAWLERS CON IMÁGENES ---
-// Permite rango dinámico (ej: 1 a 5 para globales, exactamente 6 para locales)
-function renderBrawlerGrid(containerId, targetArray, limit, buttonId, isRange = false) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = "";
-    
-    BRAWLERS.forEach(brawler => {
-        const btn = document.createElement("button");
-        btn.className = "brawler-btn";
-        btn.dataset.name = brawler; // Para el buscador
-        
-        // Imagen desde la carpeta Portraits
-        btn.innerHTML = `<img src="Portraits/${brawler}_portrait.png" alt="${brawler}"><br>${brawler}`;
-        
-        if (targetArray.includes(brawler)) btn.classList.add("selected");
-        
-        // Excluir brawlers ya baneados globalmente si estamos en bans locales
-        if (containerId === "local-grid" && state.bansGlobales.includes(brawler)) {
-            btn.disabled = true;
-            btn.classList.add("banned");
-        }
-
-        btn.onclick = () => {
-            if (targetArray.includes(brawler)) {
-                targetArray.splice(targetArray.indexOf(brawler), 1);
-                btn.classList.remove("selected");
-            } else if (targetArray.length < limit) {
-                targetArray.push(brawler);
-                btn.classList.add("selected");
-            }
-            
-            const btnNext = document.getElementById(buttonId);
-            if (isRange) {
-                // Para bans globales: de 1 a 5
-                btnNext.disabled = targetArray.length === 0;
-            } else {
-                // Para bans locales: exactamente 6
-                btnNext.disabled = targetArray.length !== limit;
-            }
-        };
-        container.appendChild(btn);
-    });
-}
-
-// --- BUSCADOR ---
-function filtrarBrawlers() {
-    let query = document.getElementById("search-bar").value.toLowerCase();
-    document.querySelectorAll(".brawler-btn").forEach(btn => {
-        if (btn.dataset.name.includes(query)) {
-            btn.style.display = "inline-block";
-        } else {
-            btn.style.display = "none";
-        }
-    });
-}
-
-// --- MODOS Y MAPAS ---
 function renderModos() {
     const container = document.getElementById("modes-grid");
     container.innerHTML = "";
     MODOS.forEach(m => {
         const btn = document.createElement("button");
+        btn.className = "btn-secondary";
         btn.innerText = m;
-        btn.onclick = () => {
-            state.modo = m;
-            renderMapas(m);
-            goToStep(5);
-        };
+        btn.onclick = () => { state.modo = m; renderMapas(m); };
         container.appendChild(btn);
     });
+    goToStep(4);
 }
 
 function renderMapas(modo) {
     const container = document.getElementById("maps-grid");
     container.innerHTML = "";
-    Object.keys(MAP_DATA[modo]).forEach(mapa => {
+    
+    // Si el modo no existe en MAP_DATA, evita que explote
+    const mapasDisponibles = MAP_DATA[modo] ? Object.keys(MAP_DATA[modo]) : [];
+    
+    if(mapasDisponibles.length === 0) {
+        container.innerHTML = "<p>No hay mapas configurados para este modo.</p>";
+    }
+
+    mapasDisponibles.forEach(mapa => {
         const btn = document.createElement("button");
+        btn.className = "btn-secondary";
         btn.innerText = mapa;
-        btn.onclick = () => {
-            state.mapa = mapa;
-            renderBrawlerGrid("local-grid", state.bansLocales, 6, "btn-next-local");
+        btn.onclick = () => { 
+            state.mapa = mapa; 
+            renderBrawlerGrid("local-grid", 6, state.bansLocales, "btn-next-local", "selected-ban", false, false);
             goToStep(6);
         };
         container.appendChild(btn);
     });
+    goToStep(5);
 }
 
-// --- LÓGICA DE DRAFT Y SECUENCIAS ---
+// --- 6. SISTEMA DE DRAFT MEJORADO ---
 function iniciarDraft(esFirstPick) {
-    state.esFirstPick = esFirstPick;
-    // Secuencia de turnos (Nosotros = 'N', Rival = 'R')
     if (esFirstPick) {
-        state.secuenciaTurnos = ['N', 'R', 'R', 'N', 'N', 'R'];
+        draftPhases = [
+            { team: 'N', count: 1 }, { team: 'R', count: 2 }, 
+            { team: 'N', count: 2 }, { team: 'R', count: 1 }
+        ];
     } else {
-        state.secuenciaTurnos = ['R', 'N', 'N', 'R', 'R', 'N'];
+        draftPhases = [
+            { team: 'R', count: 1 }, { team: 'N', count: 2 }, 
+            { team: 'R', count: 2 }, { team: 'N', count: 1 }
+        ];
     }
     
-    state.turnoActualIndex = 0;
+    currentDraftPhase = 0;
     state.nuestrosPicks = [];
     state.rivalPicks = [];
+    tempDraftSelection = [];
     
-    actualizarPantallaDraft();
+    prepararPantallaTurnoDraft();
     goToStep(8);
 }
 
-function actualizarPantallaDraft() {
-    const turnoLetra = state.secuenciaTurnos[state.turnoActualIndex];
-    const indicator = document.getElementById("turn-indicator");
+function prepararPantallaTurnoDraft() {
+    tempDraftSelection = [];
+    const turnIndicator = document.getElementById("turn-indicator");
+    const btnConfirm = document.getElementById("btn-confirm-draft");
     
-    if (state.turnoActualIndex >= 6) {
-        indicator.innerText = "Draft Finalizado";
+    // Actualizar avatares elegidos arriba
+    document.getElementById("our-picks-container").innerHTML = state.nuestrosPicks.map(p => `<img src="Portraits/${p}_portrait.png" onerror="this.src='https://via.placeholder.com/45?text=?'">`).join("");
+    document.getElementById("enemy-picks-container").innerHTML = state.rivalPicks.map(p => `<img src="Portraits/${p}_portrait.png" onerror="this.src='https://via.placeholder.com/45?text=?'">`).join("");
+
+    // Revisar si terminó el draft
+    if (currentDraftPhase >= draftPhases.length) {
+        turnIndicator.innerText = "¡DRAFT FINALIZADO!";
+        turnIndicator.style.color = "#10b981";
         document.getElementById("draft-selection-grid").innerHTML = "";
-        document.getElementById("suggestions-container").innerHTML = "";
+        btnConfirm.classList.add("hidden");
+        document.getElementById("suggestions-area").classList.add("hidden");
         
         if (state.partidaActual < state.totalPartidas) {
             document.getElementById("btn-next-match").classList.remove("hidden");
@@ -352,66 +329,99 @@ function actualizarPantallaDraft() {
         return;
     }
 
-    indicator.innerText = turnoLetra === 'N' ? "Turno: NUESTRO EQUIPO" : "Turno: RIVAL";
+    const faseActual = draftPhases[currentDraftPhase];
+    const esNuestro = faseActual.team === 'N';
     
-    // Dibujar picks actuales
-    document.getElementById("our-picks-container").innerHTML = state.nuestrosPicks.map(p => `<img src="Portraits/${p}_portrait.png" width="50">`).join("");
-    document.getElementById("enemy-picks-container").innerHTML = state.rivalPicks.map(p => `<img src="Portraits/${p}_portrait.png" width="50">`).join("");
+    // Título del turno
+    turnIndicator.innerText = esNuestro 
+        ? `Turno de NUESTRO EQUIPO (Elige ${faseActual.count})` 
+        : `Turno del RIVAL (Elige ${faseActual.count})`;
+    turnIndicator.style.color = esNuestro ? "var(--primary)" : "var(--danger)";
 
-    // Calcular y mostrar sugerencias matemáticas
-    let sugerencias = calcularMejoresPicks();
-    let contSugerencias = document.getElementById("suggestions-container");
-    contSugerencias.innerHTML = sugerencias.slice(0, 5).map(s => `
-        <div class="sugerencia-card">
-            <img src="Portraits/${s.name}_portrait.png" width="40"><br>
-            ${s.name} (Puntaje: ${s.score})
-        </div>
-    `).join("");
+    // Mostrar Botón Confirmar (oculto por defecto)
+    btnConfirm.classList.remove("hidden");
+    btnConfirm.disabled = true;
 
-    // Dibujar grilla para elegir el siguiente pick
-    const grid = document.getElementById("draft-selection-grid");
-    grid.innerHTML = "";
+    // Calcular Sugerencias
+    actualizarSugerencias();
+
+    // Dibujar la grilla para seleccionar
+    const cssClass = esNuestro ? "selected-us" : "selected-ban";
+    renderBrawlerGrid("draft-selection-grid", faseActual.count, tempDraftSelection, "btn-confirm-draft", cssClass, false, true);
     
+    // Bloquear los ya elegidos/baneados en la grilla visualmente
+    bloquearElegidosEnDraft();
+}
+
+function bloquearElegidosEnDraft() {
     const todosOcupados = [...state.bansGlobales, ...state.bansLocales, ...state.nuestrosPicks, ...state.rivalPicks];
-    
-    BRAWLERS.forEach(brawler => {
-        const btn = document.createElement("button");
-        btn.className = "brawler-btn";
-        btn.dataset.name = brawler;
-        btn.innerHTML = `<img src="Portraits/${brawler}_portrait.png" alt="${brawler}"><br>${brawler}`;
-        
-        if (todosOcupados.includes(brawler)) {
+    document.querySelectorAll("#draft-selection-grid .brawler-btn").forEach(btn => {
+        if (todosOcupados.includes(btn.dataset.name)) {
             btn.disabled = true;
             btn.classList.add("banned");
-        } else {
-            btn.onclick = () => registrarPick(brawler, turnoLetra);
         }
-        grid.appendChild(btn);
     });
-    
-    filtrarBrawlers(); // Aplicar filtro si la barra de búsqueda tiene texto
 }
 
-function registrarPick(brawler, turnoLetra) {
-    if (turnoLetra === 'N') {
-        state.nuestrosPicks.push(brawler);
+function validarBotonDraft() {
+    const faseActual = draftPhases[currentDraftPhase];
+    document.getElementById("btn-confirm-draft").disabled = (tempDraftSelection.length !== faseActual.count);
+}
+
+function confirmarPickDraft() {
+    const faseActual = draftPhases[currentDraftPhase];
+    if (faseActual.team === 'N') {
+        state.nuestrosPicks.push(...tempDraftSelection);
     } else {
-        state.rivalPicks.push(brawler);
+        state.rivalPicks.push(...tempDraftSelection);
     }
-    state.turnoActualIndex++;
-    actualizarPantallaDraft();
+    
+    currentDraftPhase++;
+    prepararPantallaTurnoDraft();
 }
 
+// --- 7. MOTOR MATEMÁTICO DE SUGERENCIAS ---
+function actualizarSugerencias() {
+    const todosOcupados = [...state.bansGlobales, ...state.bansLocales, ...state.nuestrosPicks, ...state.rivalPicks];
+    let disponibles = BRAWLERS.filter(b => !todosOcupados.includes(b));
+    
+    // Evitar crasheo si el mapa no tiene top15 configurado
+    let top15Mapa = MAP_DATA[state.modo]?.[state.mapa]?.top15 || [];
+
+    let puntajes = disponibles.map(brawler => {
+        let score = 0;
+        if (top15Mapa.includes(brawler)) score += 1;
+
+        state.rivalPicks.forEach(rival => {
+            // El rival me hace counter
+            if (BRAWLER_COUNTERS[rival] && BRAWLER_COUNTERS[rival].includes(brawler)) score -= 1;
+            // Yo le hago counter al rival
+            if (BRAWLER_COUNTERS[brawler] && BRAWLER_COUNTERS[brawler].includes(rival)) score += 1;
+        });
+        return { name: brawler, score: score };
+    });
+
+    puntajes.sort((a, b) => b.score - a.score);
+    
+    const contSugerencias = document.getElementById("suggestions-container");
+    contSugerencias.innerHTML = puntajes.slice(0, 5).map(s => `
+        <div class="sug-card">
+            <img src="Portraits/${s.name}_portrait.png" onerror="this.src='https://via.placeholder.com/30?text=?'">
+            ${s.name} (+${s.score})
+        </div>
+    `).join("");
+}
+
+// --- 8. REINICIO DE PARTIDA ---
 function siguientePartida() {
     state.partidaActual++;
     document.getElementById("current-game").innerText = state.partidaActual;
     
-    // Resetear variables de partida, mantener globales
     state.modo = "";
     state.mapa = "";
     state.bansLocales = [];
     document.getElementById("btn-next-match").classList.add("hidden");
+    document.getElementById("suggestions-area").classList.remove("hidden");
     
     renderModos();
-    goToStep(4);
 }
