@@ -117,26 +117,36 @@ const BRAWLER_COUNTERS = {
 
 const MODOS = ["Brawl Ball", "Gem Grab", "Bounty", "Hot zone", "Knockout", "Heist"];
 
+// Configura los mapas aquí
 const MAP_DATA = {
     "Brawl Ball": {
-        // Formato para añadir mapas:
-        // "Nombre del Mapa 1": { top15: ["brawler1", "brawler2", "brawler3"] },
-        // "Nombre del Mapa 2": { top15: [] }
+        "Pinhole Punt": { top15: [] },
+        "Triple Dribble": { top15: [] },
+        "Pinball Dreams": { top15: [] }
     },
     "Gem Grab": {
-        // Añadir mapas aquí
+        "Gem Fort": { top15: [] },
+        "Hard Rock Mine": { top15: [] }
     },
     "Bounty": {
-        // Añadir mapas aquí
+        "Layer Cake": { top15: [] },
+        "Hideout": { top15: [] },
+        "Dry Season": { top15: [] }
     },
     "Hot zone": {
-        // Añadir mapas aquí
+        "Dueling Beetles": { top15: [] },
+        "Ring of Fire": { top15: [] },
+        "Open Business": { top15: [] }
     },
     "Knockout": {
-        // Añadir mapas aquí
+        "Out in the Open": { top15: [] },
+        "New Horizons": { top15: [] },
+        "Goldarm Gulch": { top15: [] }
     },
     "Heist": {
-        // Añadir mapas aquí
+        "Pit Stop": { top15: [] },
+        "Kaboom Canyon": { top15: [] },
+        "Safe Zone": { top15: [] }
     }
 };
 
